@@ -1,0 +1,77 @@
+{
+  "name": "Transaction",
+  "type": "object",
+  "properties": {
+    "original_text": {
+      "type": "string",
+      "description": "The raw text input from the user"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Transaction amount in dollars"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "income",
+        "expense",
+        "savings"
+      ],
+      "description": "Type of transaction"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "food",
+        "transport",
+        "rent",
+        "utilities",
+        "entertainment",
+        "shopping",
+        "health",
+        "education",
+        "freelance",
+        "salary",
+        "investment",
+        "gift",
+        "savings",
+        "subscriptions",
+        "travel",
+        "other"
+      ],
+      "description": "Auto-categorized transaction category"
+    },
+    "description": {
+      "type": "string",
+      "description": "Parsed description of the transaction"
+    },
+    "transaction_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the transaction"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Auto-generated tags"
+    },
+    "is_deductible": {
+      "type": "boolean",
+      "description": "Whether this expense might be tax deductible"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    }
+  },
+  "required": [
+    "amount",
+    "type",
+    "category",
+    "description",
+    "transaction_date",
+    "original_text"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "name": "Liability",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Liability name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "mortgage",
+        "car_loan",
+        "student_loan",
+        "credit_card",
+        "personal_loan",
+        "medical_debt",
+        "other"
+      ],
+      "description": "Liability category"
+    },
+    "balance": {
+      "type": "number",
+      "description": "Outstanding balance"
+    },
+    "interest_rate": {
+      "type": "number",
+      "description": "Annual interest rate %"
+    },
+    "minimum_payment": {
+      "type": "number",
+      "description": "Minimum monthly payment"
+    },
+    "institution": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "balance"
+  ]
+}

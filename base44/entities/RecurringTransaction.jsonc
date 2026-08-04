@@ -1,0 +1,71 @@
+{
+  "name": "RecurringTransaction",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name/label"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "income",
+        "expense"
+      ],
+      "description": "Income or expense"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "food",
+        "transport",
+        "rent",
+        "utilities",
+        "entertainment",
+        "shopping",
+        "health",
+        "education",
+        "freelance",
+        "salary",
+        "investment",
+        "subscriptions",
+        "other"
+      ]
+    },
+    "frequency": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekly",
+        "biweekly",
+        "monthly",
+        "quarterly",
+        "annually"
+      ],
+      "description": "How often it recurs"
+    },
+    "next_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Next expected date"
+    },
+    "is_active": {
+      "type": "boolean",
+      "description": "Whether this recurring item is active"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "amount",
+    "type",
+    "category",
+    "frequency",
+    "is_active"
+  ]
+}

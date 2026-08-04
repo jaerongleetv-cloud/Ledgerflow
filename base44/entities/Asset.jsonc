@@ -1,0 +1,42 @@
+{
+  "name": "Asset",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Asset name"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "cash",
+        "savings_account",
+        "checking_account",
+        "investment",
+        "stocks",
+        "crypto",
+        "real_estate",
+        "vehicle",
+        "retirement",
+        "other"
+      ],
+      "description": "Asset category"
+    },
+    "value": {
+      "type": "number",
+      "description": "Current value in dollars"
+    },
+    "institution": {
+      "type": "string",
+      "description": "Bank or institution name"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "value"
+  ]
+}
