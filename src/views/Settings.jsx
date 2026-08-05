@@ -1,18 +1,24 @@
 "use client";
 
 import { db } from "@/api/base44Client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/AuthContext";
 import { invalidateLedgerQueries } from "@/lib/ledger-query-invalidation";
 
-import { Trash2, AlertTriangle, RotateCcw, LogOut, Pencil, Plus, Check, X } from "lucide-react";
+import { Trash2, AlertTriangle, RotateCcw, LogOut, Pencil, Plus, Check, X, Monitor, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
 const CATEGORY_TYPES = ["expense", "income", "savings"];
+const THEME_OPTIONS = [
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "System", icon: Monitor },
+];
 
 const ENTITIES = [
   { key: "transactions", label: "Transactions", entity: "Transaction" },
@@ -24,12 +30,17 @@ const ENTITIES = [
 export default function Settings() {
   const router = useRouter();
   const { logout, user } = useAuth();
+  const { theme, setTheme } = useTheme();
   const queryClient = useQueryClient();
+  const [themeMounted, setThemeMounted] = useState(false);
   const [confirming, setConfirming] = useState(null); // entity key or "all"
+  const [resetConfirmation, setResetConfirmation] = useState("");
   const [loading, setLoading] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [categoryType, setCategoryType] = useState("expense");
   const [editingCategory, setEditingCategory] = useState(null);
+
+  useEffect(() => setThemeMounted(true), []);
 
   const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useQuery({
     queryKey: ["categories"],
@@ -81,18 +92,24 @@ export default function Settings() {
   };
 
   const handleReset = async (target) => {
+    if (loading) return;
+    if (target === "all" && resetConfirmation !== "RESET") {
+      toast.error("Type RESET to confirm the financial reset");
+      return;
+    }
     setLoading(true);
     try {
       if (target === "all") {
-        await db.entities.Transaction.clearAll();
+        const deleted = await db.accounting.resetFinancialData();
         await invalidateLedgerQueries(queryClient);
-        toast.success("Transaction history cleared");
+        toast.success(`Financial data reset: ${deleted?.transactions || 0} transactions cleared`);
       } else {
         const entity = ENTITIES.find(e => e.key === target);
         await deleteAll(entity.entity, entity.key);
         toast.success(`${entity.label} cleared`);
       }
       setConfirming(null);
+      setResetConfirmation("");
     } catch (error) {
       console.error("[LedgerFlow] Reset request failed", {
         target,
@@ -127,6 +144,18 @@ export default function Settings() {
         <h1 className="text-2xl font-heading font-bold text-foreground">Settings</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Manage your data</p>
       </div>
+
+      <section className="flex items-center justify-between gap-4 border bg-card p-5">
+        <div><h2 className="text-sm font-semibold">Appearance</h2><p className="text-xs text-muted-foreground">Choose how LedgerFlow looks on this device.</p></div>
+        <Select value={themeMounted ? theme : "system"} onValueChange={setTheme} disabled={!themeMounted}>
+          <SelectTrigger className="h-9 w-36"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+              <SelectItem key={value} value={value}><span className="flex items-center gap-2"><Icon className="h-4 w-4" />{label}</span></SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </section>
 
       <section className="border bg-card p-5">
         <div className="mb-4"><h2 className="text-sm font-semibold">Categories</h2><p className="text-xs text-muted-foreground">Transaction labels remain separate from accounting accounts.</p></div>
@@ -183,16 +212,19 @@ export default function Settings() {
         {/* Global reset */}
         <div className="pt-2">
           {confirming === "all" ? (
-            <div className="flex items-center gap-3 p-3 bg-destructive/5 rounded-xl border border-destructive/20">
-              <p className="text-xs text-destructive flex-1 font-medium">This deletes only your transactions and their journal postings. Accounts, categories, net worth, and recurring items are preserved.</p>
-              <Button size="sm" variant="outline" className="h-7 text-xs rounded-lg flex-shrink-0" onClick={() => setConfirming(null)} disabled={loading}>Cancel</Button>
-              <Button size="sm" variant="destructive" className="h-7 text-xs rounded-lg flex-shrink-0" onClick={() => handleReset("all")} disabled={loading}>
-                {loading ? "Clearing..." : "Clear Transactions"}
+            <div className="flex flex-col items-stretch gap-3 border border-destructive/20 bg-destructive/5 p-3 sm:flex-row sm:items-end">
+              <div className="min-w-0 flex-1 space-y-2">
+                <p className="text-xs font-medium text-destructive">Deletes your transactions and journal postings, recurring items, assets, and liabilities. Accounts and categories remain.</p>
+                <input aria-label="Type RESET to confirm" autoComplete="off" value={resetConfirmation} onChange={(event) => setResetConfirmation(event.target.value)} placeholder="Type RESET" className="h-9 w-full border border-destructive/40 bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20" disabled={loading} />
+              </div>
+              <Button size="sm" variant="outline" className="h-9 flex-shrink-0" onClick={() => { setConfirming(null); setResetConfirmation(""); }} disabled={loading}>Cancel</Button>
+              <Button size="sm" variant="destructive" className="h-9 flex-shrink-0" onClick={() => handleReset("all")} disabled={loading || resetConfirmation !== "RESET"}>
+                {loading ? "Resetting..." : "Reset All"}
               </Button>
             </div>
           ) : (
-            <Button variant="destructive" className="w-full rounded-xl gap-2" onClick={() => setConfirming("all")}>
-              <RotateCcw className="h-4 w-4" /> Clear Transaction History
+            <Button variant="destructive" className="w-full rounded-xl gap-2" onClick={() => { setConfirming("all"); setResetConfirmation(""); }} disabled={loading}>
+              <RotateCcw className="h-4 w-4" /> Reset All Financial Data
             </Button>
           )}
         </div>

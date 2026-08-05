@@ -84,7 +84,7 @@ export default function TransactionItem({ transaction, onUpdated }) {
 
   return (
     <div className="flex items-center gap-3 py-3 px-1 group">
-      <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${config.color}`}>
+      <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 dark:bg-muted dark:text-foreground ${config.color}`}>
         <Icon className="h-4 w-4" />
       </div>
 

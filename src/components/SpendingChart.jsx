@@ -39,31 +39,32 @@ export default function SpendingChart({ transactions, days = 14 }) {
           <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(160, 84%, 39%)" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="hsl(160, 84%, 39%)" stopOpacity={0} />
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0} />
+                <stop offset="0%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
               </linearGradient>
             </defs>
             <XAxis
               dataKey="date"
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 10, fill: "hsl(215, 16%, 47%)" }}
+              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
               interval="preserveStartEnd"
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 10, fill: "hsl(215, 16%, 47%)" }}
+              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
               tickFormatter={(v) => `$${v}`}
             />
             <Tooltip
               contentStyle={{
-                background: "hsl(0, 0%, 100%)",
-                border: "1px solid hsl(214, 32%, 91%)",
+                background: "hsl(var(--popover))",
+                border: "1px solid hsl(var(--border))",
+                color: "hsl(var(--popover-foreground))",
                 borderRadius: "12px",
                 fontSize: "12px",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
@@ -73,14 +74,14 @@ export default function SpendingChart({ transactions, days = 14 }) {
             <Area
               type="monotone"
               dataKey="income"
-              stroke="hsl(160, 84%, 39%)"
+              stroke="hsl(var(--chart-1))"
               strokeWidth={2}
               fill="url(#incomeGrad)"
             />
             <Area
               type="monotone"
               dataKey="expenses"
-              stroke="hsl(0, 72%, 51%)"
+              stroke="hsl(var(--chart-2))"
               strokeWidth={2}
               fill="url(#expenseGrad)"
             />

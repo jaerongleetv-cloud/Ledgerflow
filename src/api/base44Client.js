@@ -136,6 +136,7 @@ function createId(prefix) {
 
 const ENTITY_LOCAL_FALLBACK = [];
 const TRANSACTION_DELETE_MIGRATION = "202608040003_fix_transaction_delete_cascade.sql";
+const FINANCIAL_RESET_MIGRATION = "202608050001_atomic_user_financial_reset.sql";
 
 function isMissingTableError(error) {
   return error?.code === "PGRST205";
@@ -188,6 +189,34 @@ async function clearLedgerTransactions() {
   const { data, error, status } = await supabase.rpc("ledger_clear_transactions");
   if (error) throw transactionDeleteFailure("reset", transactionId, error, status);
   console.info("[LedgerFlow] Transaction reset succeeded", { transactionId, deletedCount: data, httpStatus: status });
+  return data;
+}
+
+async function resetLedgerFinancialData() {
+  const resetScope = "current-user-financial-data";
+  console.info("[LedgerFlow] Financial reset request", { resetScope });
+  const { data, error, status } = await supabase.rpc("ledger_reset_financial_data");
+  if (error) {
+    const diagnostics = {
+      resetScope,
+      code: error.code || null,
+      message: error.message || null,
+      details: error.details || null,
+      hint: error.hint || null,
+      httpStatus: status ?? error.status ?? null,
+    };
+    console.error("[LedgerFlow] Financial reset failed", diagnostics);
+    const missingMigration = ["PGRST202", "42883"].includes(error.code);
+    const failure = new Error(
+      missingMigration
+        ? `Financial reset is not installed. Apply ${FINANCIAL_RESET_MIGRATION}.`
+        : error.message || "Could not reset financial data."
+    );
+    Object.assign(failure, diagnostics, { rawMessage: diagnostics.message });
+    if (missingMigration) failure.message = `Financial reset is not installed. Apply ${FINANCIAL_RESET_MIGRATION}.`;
+    throw failure;
+  }
+  console.info("[LedgerFlow] Financial reset succeeded", { resetScope, deleted: data, httpStatus: status });
   return data;
 }
 
@@ -1282,6 +1311,7 @@ function createBase44Client() {
       generateBalanceSheet,
       cleanupBadTransactions,
       rebuildJournalEntries,
+      resetFinancialData: resetLedgerFinancialData,
     },
   };
 }

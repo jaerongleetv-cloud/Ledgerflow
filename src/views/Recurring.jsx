@@ -111,7 +111,7 @@ function RecurringCard({ item, onDelete, onToggle }) {
 
   return (
     <div className="flex items-center gap-3 py-3 px-1 group">
-      <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isIncome ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-500"} ${!item.is_active ? "opacity-40" : ""}`}>
+      <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isIncome ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400" : "bg-red-100 text-red-500 dark:bg-red-950/50 dark:text-red-400"} ${!item.is_active ? "opacity-40" : ""}`}>
         {isIncome ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
       </div>
       <div className={`flex-1 min-w-0 ${!item.is_active ? "opacity-50" : ""}`}>

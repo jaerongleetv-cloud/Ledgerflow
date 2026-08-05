@@ -63,8 +63,9 @@ export default function CategoryBreakdown({ transactions }) {
               <Tooltip
                 formatter={(value) => [`$${value.toFixed(2)}`]}
                 contentStyle={{
-                  background: "hsl(0, 0%, 100%)",
-                  border: "1px solid hsl(214, 32%, 91%)",
+                  background: "hsl(var(--popover))",
+                  border: "1px solid hsl(var(--border))",
+                  color: "hsl(var(--popover-foreground))",
                   borderRadius: "12px",
                   fontSize: "12px",
                 }}

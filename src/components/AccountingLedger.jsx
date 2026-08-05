@@ -35,11 +35,11 @@ const GROUP_LABELS = {
 };
 
 const TYPE_STYLES = {
-  Asset: "border-emerald-200 bg-emerald-50 text-emerald-900",
-  Liability: "border-red-200 bg-red-50 text-red-900",
-  Equity: "border-blue-200 bg-blue-50 text-blue-900",
-  Revenue: "border-teal-200 bg-teal-50 text-teal-900",
-  Expense: "border-amber-200 bg-amber-50 text-amber-950",
+  Asset: "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100",
+  Liability: "border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950/40 dark:text-red-100",
+  Equity: "border-blue-200 bg-blue-50 text-blue-900 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-100",
+  Revenue: "border-teal-200 bg-teal-50 text-teal-900 dark:border-teal-800 dark:bg-teal-950/40 dark:text-teal-100",
+  Expense: "border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100",
 };
 
 const EMPTY_ACCOUNT = { name: "", type: "Asset", opening_balance: "0", description: "" };
@@ -169,7 +169,7 @@ function LedgerState({ query }) {
     return <div className="flex items-center justify-center py-16 text-sm text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Loading ledger</div>;
   }
   if (query.error) {
-    return <div className="border border-red-200 bg-red-50 p-4 text-sm text-red-700">{query.error.message}</div>;
+    return <div className="border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{query.error.message}</div>;
   }
   return null;
 }

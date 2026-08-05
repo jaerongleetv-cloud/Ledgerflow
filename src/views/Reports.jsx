@@ -149,18 +149,19 @@ export default function Reports() {
                   dataKey="month"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 10, fill: "hsl(215, 16%, 47%)" }}
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 10, fill: "hsl(215, 16%, 47%)" }}
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                   tickFormatter={(v) => `$${v}`}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: "hsl(0, 0%, 100%)",
-                    border: "1px solid hsl(214, 32%, 91%)",
+                    background: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    color: "hsl(var(--popover-foreground))",
                     borderRadius: "12px",
                     fontSize: "12px",
                   }}
@@ -169,11 +170,11 @@ export default function Reports() {
                 <Legend
                   iconType="circle"
                   iconSize={8}
-                  wrapperStyle={{ fontSize: "11px" }}
+                  wrapperStyle={{ fontSize: "11px", color: "hsl(var(--muted-foreground))" }}
                 />
-                <Bar dataKey="income" fill="hsl(160, 84%, 39%)" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="expenses" fill="hsl(0, 72%, 51%)" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="savings" fill="hsl(217, 91%, 60%)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="income" fill="hsl(var(--chart-1))" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="expenses" fill="hsl(var(--chart-2))" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="savings" fill="hsl(var(--chart-3))" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

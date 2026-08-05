@@ -6,6 +6,10 @@ const LEDGER_QUERY_KEYS = [
   ["reports"],
   ["t-accounts"],
   ["financial-statements"],
+  ["recurring"],
+  ["assets"],
+  ["liabilities"],
+  ["net-worth"],
 ];
 
 export async function invalidateLedgerQueries(queryClient) {
