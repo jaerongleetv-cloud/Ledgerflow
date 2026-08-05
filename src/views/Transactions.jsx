@@ -1,6 +1,8 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
+import { db } from "@/api/base44Client";
+import { invalidateLedgerQueries } from "@/lib/ledger-query-invalidation";
 import { useState, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -62,16 +64,23 @@ export default function Transactions() {
   const handleDelete = async (id) => {
     if (deletingId || !window.confirm("Delete this transaction and its journal posting?")) return;
     setDeletingId(id);
-    const { error } = await supabase.from("transactions").delete().eq("id", id);
-    if (error) {
-      toast.error(error.message || "Failed to delete transaction");
+    try {
+      await db.entities.Transaction.delete(id);
+      await invalidateLedgerQueries(queryClient);
+      toast.success("Transaction deleted");
+    } catch (error) {
+      console.error("[LedgerFlow] Transaction page delete failed", {
+        transactionId: id,
+        code: error?.code || null,
+        message: error?.message || null,
+        details: error?.details || null,
+        hint: error?.hint || null,
+        httpStatus: error?.httpStatus ?? error?.status ?? null,
+      });
+      toast.error(error?.message || "Could not delete the transaction and its journal posting");
+    } finally {
       setDeletingId(null);
-      return;
     }
-    await queryClient.invalidateQueries({ queryKey: ["transactions"] });
-    queryClient.invalidateQueries({ queryKey: ["ledger-entries"] });
-    toast.success("Transaction deleted");
-    setDeletingId(null);
   };
 
   if (isLoading) {

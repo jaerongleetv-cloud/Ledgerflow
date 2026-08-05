@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/AuthContext";
+import { invalidateLedgerQueries } from "@/lib/ledger-query-invalidation";
 
 import { Trash2, AlertTriangle, RotateCcw, LogOut, Pencil, Plus, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,11 @@ export default function Settings() {
   };
 
   const deleteAll = async (entityName, queryKey) => {
+    if (entityName === "Transaction") {
+      await db.entities.Transaction.clearAll();
+      await invalidateLedgerQueries(queryClient);
+      return;
+    }
     const records = await db.entities[entityName].list("", 1000);
     await Promise.all(records.map(r => db.entities[entityName].delete(r.id)));
     queryClient.invalidateQueries({ queryKey: [queryKey] });
@@ -78,8 +84,9 @@ export default function Settings() {
     setLoading(true);
     try {
       if (target === "all") {
-        await Promise.all(ENTITIES.map(e => deleteAll(e.entity, e.key)));
-        toast.success("All data has been cleared");
+        await db.entities.Transaction.clearAll();
+        await invalidateLedgerQueries(queryClient);
+        toast.success("Transaction history cleared");
       } else {
         const entity = ENTITIES.find(e => e.key === target);
         await deleteAll(entity.entity, entity.key);
@@ -87,7 +94,16 @@ export default function Settings() {
       }
       setConfirming(null);
     } catch (error) {
-      toast.error(error.message || "Could not clear data");
+      console.error("[LedgerFlow] Reset request failed", {
+        target,
+        transactionId: target === "all" || target === "transactions" ? "all-owned-transactions" : null,
+        code: error?.code || null,
+        message: error?.message || null,
+        details: error?.details || null,
+        hint: error?.hint || null,
+        httpStatus: error?.httpStatus ?? error?.status ?? null,
+      });
+      toast.error(error?.message || "Could not clear data");
     } finally {
       setLoading(false);
     }
@@ -168,15 +184,15 @@ export default function Settings() {
         <div className="pt-2">
           {confirming === "all" ? (
             <div className="flex items-center gap-3 p-3 bg-destructive/5 rounded-xl border border-destructive/20">
-              <p className="text-xs text-destructive flex-1 font-medium">This will delete ALL your financial data permanently. Are you sure?</p>
+              <p className="text-xs text-destructive flex-1 font-medium">This deletes only your transactions and their journal postings. Accounts, categories, net worth, and recurring items are preserved.</p>
               <Button size="sm" variant="outline" className="h-7 text-xs rounded-lg flex-shrink-0" onClick={() => setConfirming(null)} disabled={loading}>Cancel</Button>
               <Button size="sm" variant="destructive" className="h-7 text-xs rounded-lg flex-shrink-0" onClick={() => handleReset("all")} disabled={loading}>
-                {loading ? "Clearing..." : "Yes, Delete All"}
+                {loading ? "Clearing..." : "Clear Transactions"}
               </Button>
             </div>
           ) : (
             <Button variant="destructive" className="w-full rounded-xl gap-2" onClick={() => setConfirming("all")}>
-              <RotateCcw className="h-4 w-4" /> Reset All Data
+              <RotateCcw className="h-4 w-4" /> Clear Transaction History
             </Button>
           )}
         </div>

@@ -81,14 +81,12 @@ try {
   if (linesError) throw linesError;
   assert(lines.length === 2 && lines.reduce((sum, line) => sum + Number(line.debit), 0) === 8.5, "Transaction update replaces its posting without duplication");
 
-  const { error: journalDeleteError } = await supabase.from("journal_entries").delete().eq("transaction_id", transaction.id);
-  if (journalDeleteError) throw journalDeleteError;
   const { error: transactionDeleteError } = await supabase.from("transactions").delete().eq("id", transaction.id);
   if (transactionDeleteError) throw transactionDeleteError;
   created.transaction = null;
   const { count: remainingLines, error: cascadeError } = await supabase.from("journal_entries").select("id", { count: "exact", head: true }).eq("transaction_id", transaction.id);
   if (cascadeError) throw cascadeError;
-  assert(remainingLines === 0, "Transaction and related journal lines delete cleanly");
+  assert(remainingLines === 0, "Transaction delete cascades to journal lines");
 
   const { error: categoryDeleteError } = await supabase.from("categories").delete().eq("id", created.category);
   if (categoryDeleteError) throw categoryDeleteError;

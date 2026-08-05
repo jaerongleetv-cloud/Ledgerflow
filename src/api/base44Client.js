@@ -135,6 +135,7 @@ function createId(prefix) {
 }
 
 const ENTITY_LOCAL_FALLBACK = [];
+const TRANSACTION_DELETE_MIGRATION = "202608040003_fix_transaction_delete_cascade.sql";
 
 function isMissingTableError(error) {
   return error?.code === "PGRST205";
@@ -142,6 +143,52 @@ function isMissingTableError(error) {
 
 function isPermissionDeniedError(error) {
   return error?.code === "42501";
+}
+
+function transactionDeleteFailure(operation, transactionId, error, status) {
+  const diagnostics = {
+    operation,
+    transactionId,
+    code: error?.code || null,
+    message: error?.message || "Unknown Supabase delete error",
+    details: error?.details || null,
+    hint: error?.hint || null,
+    httpStatus: status ?? error?.status ?? null,
+  };
+  console.error("[LedgerFlow] Transaction delete/reset failed", diagnostics);
+
+  let message = diagnostics.message;
+  if (error?.code === "23503") {
+    message = `The transaction is still linked to journal entries. Apply ${TRANSACTION_DELETE_MIGRATION}.`;
+  } else if (["PGRST202", "42883"].includes(error?.code)) {
+    message = `Transaction deletion is not installed. Apply ${TRANSACTION_DELETE_MIGRATION}.`;
+  } else if (["42501", "P0002"].includes(error?.code)) {
+    message = "The transaction was not found or you do not have permission to delete it.";
+  }
+
+  const failure = new Error(message);
+  Object.assign(failure, diagnostics, { rawMessage: diagnostics.message });
+  failure.message = message;
+  return failure;
+}
+
+async function deleteLedgerTransaction(transactionId, operation = "delete") {
+  console.info("[LedgerFlow] Transaction delete request", { operation, transactionId });
+  const { data, error, status } = await supabase.rpc("ledger_delete_transaction", {
+    p_transaction_id: transactionId,
+  });
+  if (error) throw transactionDeleteFailure(operation, transactionId, error, status);
+  console.info("[LedgerFlow] Transaction delete succeeded", { operation, transactionId, httpStatus: status });
+  return data;
+}
+
+async function clearLedgerTransactions() {
+  const transactionId = "all-owned-transactions";
+  console.info("[LedgerFlow] Transaction reset request", { transactionId });
+  const { data, error, status } = await supabase.rpc("ledger_clear_transactions");
+  if (error) throw transactionDeleteFailure("reset", transactionId, error, status);
+  console.info("[LedgerFlow] Transaction reset succeeded", { transactionId, deletedCount: data, httpStatus: status });
+  return data;
 }
 
 function sortRecords(items, sortField = "") {
@@ -609,14 +656,18 @@ async function deleteAllJournalEntries() {
 }
 
 async function cleanupBadTransactions() {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("transactions")
-    .delete()
+    .select("id")
     .ilike("description", "Parse this financial transaction%");
 
   if (error) {
     console.error("SUPABASE ERROR:", JSON.stringify(error, null, 2));
     throw new Error(error.message);
+  }
+
+  for (const transaction of data || []) {
+    await deleteLedgerTransaction(transaction.id, "cleanup-bad-transaction");
   }
 
   return true;
@@ -934,7 +985,7 @@ function createEntityManager(entityName) {
           try {
             await createJournalEntry({ ...data, category: categoryValue, account: accountName });
           } catch (journalError) {
-            await supabase.from("transactions").delete().eq("id", data.id);
+            await deleteLedgerTransaction(data.id, "rollback-failed-posting");
             throw new Error(`Transaction was not saved because its ledger posting failed: ${journalError?.message || journalError}`);
           }
           return data;
@@ -996,14 +1047,36 @@ function createEntityManager(entityName) {
     },
 
     delete: async (id) => {
-      const { error } = await supabase
+      if (entityName === "Transaction") {
+        await deleteLedgerTransaction(id);
+        return true;
+      }
+
+      const { error, status } = await supabase
         .from(table)
         .delete()
         .eq("id", id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("[LedgerFlow] Entity delete failed", {
+          entityName,
+          id,
+          code: error.code || null,
+          message: error.message || null,
+          details: error.details || null,
+          hint: error.hint || null,
+          httpStatus: status ?? null,
+        });
+        throw error;
+      }
 
       return true;
+    },
+    clearAll: async () => {
+      if (entityName !== "Transaction") {
+        throw new Error(`Bulk clear is not supported for ${entityName}`);
+      }
+      return clearLedgerTransactions();
     },
   };
 }
