@@ -10,7 +10,11 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "verify:ledger": "node --use-system-ca scripts/verify-ledger.mjs",
-    "verify:crud": "node --use-system-ca scripts/verify-crud.mjs"
+    "verify:crud": "node --use-system-ca scripts/verify-crud.mjs",
+    "test:aemeath": "node --test scripts/test-aemeath-read-api.mjs",
+    "verify:aemeath": "node --use-system-ca scripts/verify-aemeath-read-api.mjs",
+    "aemeath:token:create": "node --use-system-ca scripts/manage-aemeath-token.mjs create",
+    "aemeath:token:revoke": "node --use-system-ca scripts/manage-aemeath-token.mjs revoke"
   },
   "dependencies": {
     "@base44/sdk": "0.8.40",
@@ -72,6 +76,7 @@
     "react-markdown": "9.1.0",
     "react-resizable-panels": "2.1.9",
     "recharts": "2.15.4",
+    "server-only": "^0.0.1",
     "sonner": "2.0.7",
     "tailwind-merge": "3.6.0",
     "tailwindcss-animate": "1.0.7",

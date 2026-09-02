@@ -6,12 +6,16 @@ const nextConfig = {
     if (!baseUrl) return [];
 
     const normalizedBase = baseUrl.replace(/\/$/, "");
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${normalizedBase}/api/:path*`,
-      },
-    ];
+    return {
+      beforeFiles: [],
+      afterFiles: [],
+      fallback: [
+        {
+          source: "/api/:path*",
+          destination: `${normalizedBase}/api/:path*`,
+        },
+      ],
+    };
   },
 };
 
